@@ -10,3 +10,5 @@ test_bsg.v
 ../../../bsg_misc/bsg_nor2.v
 ../../../bsg_misc/bsg_adder_cin.v
 ../../../bsg_misc/bsg_counter_clear_up.v
+../../../bsg_misc/bsg_adder_carry_save.v
+../../../bsg_misc/bsg_pg_tree.v

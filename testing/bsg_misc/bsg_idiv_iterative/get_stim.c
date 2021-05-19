@@ -37,7 +37,7 @@ void init()
   delay.time.real = 0;
 
   /* open input file */
-  filename = "divide_4.stim"; 
+  filename = "divide_32.stim"; 
   in_file = fopen(filename, "r");
 
   /* end if file can't be opened */

@@ -22,64 +22,71 @@
 `include "bsg_defines.v"
 
 module bsg_pg_tree
-#(parameter input_width_p="inv"
-  ,parameter output_width_p="inv"
-  , parameter nodes_p=1         
-  , parameter edges_lp=nodes_p*3
+#(  parameter input_width_p= 32
+  , parameter output_width_p="inv"
+  , parameter nodes_p=input_width_p - 1         
+  , parameter edges_lp=(input_width_p * 2) - 1
   , parameter int l_edge_p [nodes_p-1:0]    = ' {0}
   , parameter int r_edge_p [nodes_p-1:0]    = ' {0}
   , parameter int o_edge_p [nodes_p-1:0]    = ' {0}
-  , parameter int node_type_p [nodes_p-1:0] = ' {0}
+  , parameter node_type_p = 0
   // for physical placement or doing even/odd complementary logic per Fig 11.16b
   // currently unimplemented
-  , parameter int row_p    [nodes_p-1:0]     = ' {0}
+  //, parameter int row_p    [nodes_p-1:0]     = ' {0}
   )	
 
-  (input  [input_width_p-1:0] p_i
-   ,input [input_width_p-1:0] g_i
-   ,output [output_width_p-1:0] p_o
-   ,output [output_width_p-1:0] g_o
+  (input  [input_width_p-1:0] a_i
+   ,input [input_width_p-1:0] b_i
+   ,output g_o
   );
   
+
   wire [edges_lp-1:0] p;
   wire [edges_lp-1:0] g;
 
   // the input wires are placed at the start of the p and g arrays
-  assign p[input_width_p-1:0] = p_i; 
-  assign g[input_width_p-1:0] = g_i;
+  assign p[input_width_p-1:0] = a_i | b_i; 
+  assign g[input_width_p-1:0] = a_i & b_i;
 
-  // the output wires are at the end of the p and g arrays
-  assign p_o = p[edges_lp-1-:output_width_p];
-  assign g_o = g[edges_lp-1-:output_width_p];
-  
-  genvar i;
+  assign g_o = g[edges_lp-1];   
+   
+  genvar i, j;
+   
+  /*for (i=0; i < width_log; i=i+1) begin
+    for (j=0; j < 2**(input_width_p - 1 - i); j=j+1) begin
+      assign r_edge_p[(2**(width_log - 1- i)) * (2**(i + 1) - 2) + j] = (2**(width_log - i)) * (2**(i + 1) - 2) + j*2;
+      assign l_edge_p[(2**(width_log - 1- i)) * (2**(i + 1) - 2) + j] = (2**(width_log - i)) * (2**(i + 1) - 2) + j*2 + 1;
+      assign o_edge_p[(2**(width_log - 1- i)) * (2**(i + 1) - 2) + j] = (2**(width_log - i - 1)) * (2**(i + 1) - 1) + j;
+    end
+  end*/
+   
   
   for (i=0; i < nodes_p; i=i+1)
-	begin: rof
-    if (node_type_p[i] == 0) // so called "black cell" from Weste & Harris 4th ed
-      begin: blk             // g[l_edge_p] should be assigned to faster input of AND gate
-      	assign p[o_edge_p[i]] = p[l_edge_p[i]] | p[r_edge_p[i]];
-      	assign g[o_edge_p[i]] = g[r_edge_p[i]] | (g[l_edge_p[i]] & p[r_edge_p[i]]);      
+      begin: rof
+    if (node_type_p == 0) // so called "black cell" from Weste & Harris 4th ed
+      begin: blk
+        //assign j = o_edge_p[i];           // g[l_edge_p] should be assigned to faster input of AND gate
+      	assign p[o_edge_p[i]] = p[l_edge_p[i]] & p[r_edge_p[i]];
+      	assign g[o_edge_p[i]] = g[l_edge_p[i]] | (g[r_edge_p[i]] & p[l_edge_p[i]]);      
       end
-    else if (node_type_p[i] == 1) // "grey cell"
+    else if (node_type_p == 1) // "grey cell"
       begin: gry                  // g[l_edge_p] should be assigned to faster input of AND gate
         assign p[o_edge_p[i]] = `BSG_UNDEFINED_IN_SIM(0);
-    	  assign g[o_edge_p[i]] = g[r_edge_p[i]] | (g[l_edge_p[i]] & p[r_edge_p[i]]);       
+        assign g[o_edge_p[i]] = g[r_edge_p[i]] | (g[l_edge_p[i]] & p[r_edge_p[i]]);       
       end
-    else if (node_type_p[i] == 2) // "black_buffer"
+    else if (node_type_p == 2) // "black_buffer"
     	begin: bbuf                 // note: only takes left side!
         assign p[o_edge_p[i]] = p[l_edge_p[i]];
         assign g[o_edge_p[i]] = g[l_edge_p[i]];            
       end
-    else if (node_type_p[i] == 3) // "grey_buffer"
-    	begin: gbuf                 // note: only takes left side!
+    else if (node_type_p == 3) // "grey_buffer"
+      begin: gbuf                 // note: only takes left side!
         assign p[o_edge_p[i]] = `BSG_UNDEFINED_IN_SIM(0);
         assign g[o_edge_p[i]] = g[l_edge_p[i]];            
       end
 	  else
       begin
-      	initial $error("unknown node_type: ",node_type_p[i]);
+      	initial $error("unknown node_type: ",node_type_p);
       end
   end
-  
 endmodule

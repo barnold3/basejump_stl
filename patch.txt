@@ -1,0 +1,17 @@
+diff --git a/testing/bsg_misc/bsg_idiv_iterative/divide.files b/testing/bsg_misc/bsg_idiv_iterative/divide.files
+index 15382be..400ed76 100644
+--- a/testing/bsg_misc/bsg_idiv_iterative/divide.files
++++ b/testing/bsg_misc/bsg_idiv_iterative/divide.files
+@@ -3,12 +3,10 @@ test_bsg.v
+ ../../../bsg_misc/bsg_defines.v
+ ../../../bsg_misc/bsg_idiv_iterative.v
+ ../../../bsg_misc/bsg_idiv_iterative_controller.v
+-../../../bsg_misc/bsg_buf.v
+ ../../../bsg_misc/bsg_dff_en.v
+ ../../../bsg_misc/bsg_mux.v
+ ../../../bsg_misc/bsg_mux_one_hot.v
+ ../../../bsg_misc/bsg_xnor.v
+-../../../bsg_misc/bsg_buf_ctrl.v
+ ../../../bsg_misc/bsg_nor2.v
+ ../../../bsg_misc/bsg_adder_cin.v
+ ../../../bsg_misc/bsg_counter_clear_up.v

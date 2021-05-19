@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>
-#define WIDTH 4
-#define ITERS 1 << (WIDTH*2)
-// #define ITERS 10000
+#define WIDTH 32
+//#define ITERS 1 << (WIDTH*2)
+#define ITERS 10000
 
 // Function to compute quotient
 unsigned long long int quotient(unsigned long long int a, unsigned long long int b){
@@ -20,7 +20,6 @@ unsigned long long int quotient(unsigned long long int a, unsigned long long int
   } else { // Return integer division result when not a RISC-V edge case
     return a / b;
   }
-  printf("hey\n");
 }
 
 // Function to compute remainder

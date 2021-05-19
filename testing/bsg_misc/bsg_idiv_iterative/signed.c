@@ -3,9 +3,9 @@
 // RISC-V ISA Manual: Section 7.2 - Division Operations
 #include <stdio.h>
 #include <math.h>
-#define WIDTH 4
-#define ITERS 1 << (WIDTH * 2)
-// #define ITERS 10000
+#define WIDTH 32
+//#define ITERS 1 << (WIDTH * 2)
+#define ITERS 10000
 
 // Function to compute quotient
 long long int quotient(long long int a, long long int b){

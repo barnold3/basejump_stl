@@ -7,10 +7,10 @@
 //
 `define SIGN			// test signed divide
 `define UNSIGN			// test unsigned divide
-`define WIDTH 4
+`define WIDTH 32
 `define BITS_PER_ITER 2
-`define ITERS 2 ** (`WIDTH * 2)
-// `define ITERS 10000
+//`define ITERS 2 ** (`WIDTH * 2)
+`define ITERS 10000
 
 module test_bsg;
 

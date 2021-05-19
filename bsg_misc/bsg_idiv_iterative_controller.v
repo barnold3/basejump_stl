@@ -17,8 +17,8 @@ module bsg_idiv_iterative_controller #(parameter width_p=32, parameter bits_per_
 
       ,input               zero_divisor_i
       ,input               signed_div_r_i
-      ,input               adder1_result_is_neg_i
-      ,input               adder2_result_is_neg_i
+      ,input               adder_result_is_neg_i
+      ,input               csa_result_is_neg_i
       ,input               opA_is_neg_i
       ,input               opC_is_neg_i
 
@@ -35,6 +35,11 @@ module bsg_idiv_iterative_controller #(parameter width_p=32, parameter bits_per_
       ,output logic [bits_per_iter_p + 1:0]  opC_sel_o
       ,output logic        opC_ld_o
 
+      ,output logic        csa_ld_o
+      ,output logic        csa_clr_o
+      ,output logic  [1:0] fadd_mux0_sel_o
+      ,output logic  [1:0] fadd_mux1_sel_o
+
       ,output logic        latch_signed_div_o
       ,output logic        adder1_cin_o
 
@@ -45,7 +50,7 @@ module bsg_idiv_iterative_controller #(parameter width_p=32, parameter bits_per_
    reg q_neg;
    reg r_neg;
    reg neg_ld;
-   reg add1_neg_last, add2_neg_last;
+   reg add_neg_last, csa_neg_last;
    
    typedef enum logic[5:0] 
            {WAIT, NEG0, NEG1, SHIFT,
@@ -55,8 +60,8 @@ module bsg_idiv_iterative_controller #(parameter width_p=32, parameter bits_per_
    idiv_ctrl_stat state, next_state;
 
    always @(posedge clk_i) begin
-      add1_neg_last <= adder1_result_is_neg_i;
-      add2_neg_last <= adder2_result_is_neg_i;
+      add_neg_last <= adder_result_is_neg_i;
+      csa_neg_last <= csa_result_is_neg_i;
       
       if (neg_ld) begin
         // the quotient is negated if the signs of the operands differ
@@ -94,9 +99,9 @@ module bsg_idiv_iterative_controller #(parameter width_p=32, parameter bits_per_
       opA_ld_o       = 1'b0;
 
       if (bits_per_iter_p == 2)
-        opA_inv_o    = !add2_neg_last;
+        opA_inv_o    = !csa_neg_last;
       else
-	opA_inv_o    = !add1_neg_last;
+	opA_inv_o    = !add_neg_last;
       
       opA_clr_l_o    = 1'b1;
       opB_sel_o      = 3'b001;
@@ -107,10 +112,14 @@ module bsg_idiv_iterative_controller #(parameter width_p=32, parameter bits_per_
       opC_ld_o       = 1'b1;
       
       if (bits_per_iter_p == 2)
-        adder1_cin_o    = !add2_neg_last;
+        adder1_cin_o    = 1'b0;
       else
-        adder1_cin_o    = !add1_neg_last;
-      
+        adder1_cin_o    = !add_neg_last;
+
+      csa_ld_o = 1'b0;
+      csa_clr_o = 1'b1;
+      fadd_mux0_sel_o = 2'b01;
+      fadd_mux1_sel_o = 2'b01;
       neg_ld         = 1'b0;
       latch_signed_div_o   = 1'b0;
       next_state    = WAIT;
@@ -177,17 +186,24 @@ module bsg_idiv_iterative_controller #(parameter width_p=32, parameter bits_per_
 
     CALC: begin
        if (bits_per_iter_p == 2) begin
+         fadd_mux0_sel_o = 2'b10;
+	 fadd_mux1_sel_o = 2'b10;
+
+         csa_ld_o = 1'b1;
+ 
+	  
          opB_sel_o  = calc_done ? 4'b0100 : 4'b0001;
 	 opC_sel_o  = calc_done ? 4'b0010 : 4'b0001;
          if (calc_cnt == 0) begin
-	    opA_inv_o    = !add1_neg_last;
-	    adder1_cin_o = !add1_neg_last;
+	    opA_inv_o    = !add_neg_last;
+	    adder1_cin_o = !add_neg_last;
+	    csa_clr_o    = 1'b0;
          end
        end else
          opB_sel_o  = calc_done ? 3'b010 : 3'b001;
        
        if (calc_done) begin
-          if (adder1_result_is_neg_i) next_state = REPAIR;
+          if (adder_result_is_neg_i) next_state = REPAIR;
           else next_state = REMAIN;
        end else 
           next_state = CALC;
@@ -198,7 +214,7 @@ module bsg_idiv_iterative_controller #(parameter width_p=32, parameter bits_per_
        opA_inv_o    = 1'b0;
        opC_ld_o     = 1'b0;
        adder1_cin_o    = 1'b0;
-       
+    
        if (bits_per_iter_p == 2)
 	 opB_sel_o = 4'b0100;
        else
